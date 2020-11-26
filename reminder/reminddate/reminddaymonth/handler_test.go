@@ -62,7 +62,7 @@ func newTestHandleRemindDayMonthTestCases() map[string]TestCase {
 			},
 		},
 		"with hours and minutes": {
-			Text: "/remind me on the 4th of march at 23:34 update weekly report",
+			Text: "/remind me on the 4th of March at 23:34 update weekly report",
 			ExpectedDateTime: reminder.DateTime{
 				DayOfMonth: 4,
 				Month:      3,

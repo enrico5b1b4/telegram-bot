@@ -37,7 +37,7 @@ func TestHandleRemindEveryDayNumberMonth_Success(t *testing.T) {
 			},
 		},
 		"with hours and minutes": {
-			Text: "/remind me every 4th of january at 23:34 update weekly report",
+			Text: "/remind me every 4th of January at 23:34 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
 				DayOfMonth: "4",
 				Month:      "1",
