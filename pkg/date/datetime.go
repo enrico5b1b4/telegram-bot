@@ -63,7 +63,7 @@ func ToNumericDayOfWeek(day string) int {
 	}
 }
 
-//nolint:gocritic
+// nolint:gocritic
 func ConvertTo24H(hour, minute int, ampm string) (int, int) {
 	// midnight
 	if ampm == "am" && hour == 12 {
@@ -72,7 +72,7 @@ func ConvertTo24H(hour, minute int, ampm string) (int, int) {
 
 	// noon
 	if ampm == "pm" && hour == 12 {
-		//nolint:gomnd
+		// nolint:gomnd
 		return 12, minute
 	}
 

@@ -4,22 +4,7 @@ import (
 	"log"
 
 	"github.com/enrico5b1b4/telegram-bot/pkg/chatpreference"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/gettimezone"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindat"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/reminddaymonth"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/reminddayofweek"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/reminddelete"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/reminddetail"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindevery"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindeveryday"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindeverydaynumber"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindeverydaynumbermonth"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindeverydayofweek"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindhelp"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindin"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindlist"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/remindwhen"
-	"github.com/enrico5b1b4/telegram-bot/pkg/command/settimezone"
+	"github.com/enrico5b1b4/telegram-bot/pkg/command"
 	"github.com/enrico5b1b4/telegram-bot/pkg/cron"
 	"github.com/enrico5b1b4/telegram-bot/pkg/date"
 	"github.com/enrico5b1b4/telegram-bot/pkg/reminder"
@@ -32,7 +17,7 @@ type Bot struct {
 	telegramBot   telegram.TBWrapBot
 }
 
-// nolint:funlen
+// nolint:funlen,lll
 func New(
 	allowedChats []int,
 	database *bbolt.DB,
@@ -43,15 +28,15 @@ func New(
 	chatPreferenceStore := chatpreference.NewStore(database)
 	chatPreferenceService := chatpreference.NewService(chatPreferenceStore)
 	remindCronFuncService := reminder.NewCronFuncService(telegramBot, cronScheduler, reminderStore, chatPreferenceStore)
-	remindListService := remindlist.NewService(reminderStore, cronScheduler, chatPreferenceStore)
-	remindDeleteService := reminddelete.NewService(reminderStore, cronScheduler)
+	remindListService := command.NewRemindListService(reminderStore, cronScheduler, chatPreferenceStore)
+	remindDeleteService := command.NewRemindeDeleteService(reminderStore, cronScheduler)
 	reminderScheduler := reminder.NewScheduler(telegramBot, remindCronFuncService, reminderStore, cronScheduler, chatPreferenceStore)
 	remindDateService := reminder.NewService(reminderScheduler, reminderStore, chatPreferenceStore, date.RealTimeNow)
-	remindDetailService := reminddetail.NewService(reminderStore, cronScheduler, chatPreferenceStore)
+	remindDetailService := command.NewRemindDetailService(reminderStore, cronScheduler, chatPreferenceStore)
 	reminderLoader := reminder.NewLoaderService(telegramBot, cronScheduler, reminderStore, chatPreferenceStore, remindCronFuncService)
-	setTimeZoneService := settimezone.NewService(chatPreferenceStore, reminderLoader)
-	remindDetailButtons := reminddetail.NewButtons()
-	remindListButtons := remindlist.NewButtons()
+	setTimeZoneService := command.NewSetTimezoneService(chatPreferenceStore, reminderLoader)
+	remindDetailButtons := command.NewRemindDetailButtons()
+	remindListButtons := command.NewRemindListButtons()
 	reminderCompleteButtons := reminder.NewButtons()
 
 	chatPreferenceService.CreateDefaultChatPreferences(allowedChats)
@@ -63,73 +48,73 @@ func New(
 	}
 	log.Printf("loaded %d reminders", remindersLoaded)
 
-	telegramBot.Handle(remindlist.HandlePattern, remindlist.HandleRemindList(remindListService, remindListButtons))
-	telegramBot.Handle(remindhelp.HandlePattern, remindhelp.HandleRemindHelp())
-	telegramBot.HandleMultiRegExp(reminddetail.HandlePattern, reminddetail.HandleRemindDetail(remindDetailService, reminddetail.NewButtons()))
-	telegramBot.HandleMultiRegExp(reminddelete.HandlePattern, reminddelete.HandleRemindDelete(remindDeleteService))
+	telegramBot.Handle(command.HandlePatternRemindList, command.HandleRemindList(remindListService, remindListButtons))
+	telegramBot.Handle(command.HandlePatternHelp, command.HandleRemindHelp())
+	telegramBot.HandleMultiRegExp(command.HandlePatternRemindDetail, command.HandleRemindDetail(remindDetailService, command.NewRemindDetailButtons()))
+	telegramBot.HandleMultiRegExp(command.HandlePatternRemindDelete, command.HandleRemindDelete(remindDeleteService))
 	telegramBot.HandleRegExp(
-		reminddaymonth.HandlePattern,
-		reminddaymonth.HandleRemindDayMonth(remindDateService),
+		command.HandlePatternRemindDayMonth,
+		command.HandleRemindDayMonth(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		reminddayofweek.HandlePattern,
-		reminddayofweek.HandleRemindDayOfWeek(remindDateService),
+		command.HandlePatternRemindDayOfWeek,
+		command.HandleRemindDayOfWeek(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindeverydaynumber.HandlePattern,
-		remindeverydaynumber.HandleRemindEveryDayNumber(remindDateService),
+		command.HandlePatternRemindEveryDayNumber,
+		command.HandleRemindEveryDayNumber(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindeverydaynumbermonth.HandlePattern,
-		remindeverydaynumbermonth.HandleRemindEveryDayNumberMonth(remindDateService),
+		command.HandlePatternRemindEveryDayNumberMonth,
+		command.HandleRemindEveryDayNumberMonth(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindin.HandlePattern,
-		remindin.HandleRemindIn(remindDateService),
+		command.HandlePatternRemindIn,
+		command.HandleRemindIn(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindevery.HandlePattern,
-		remindevery.HandleRemindEvery(remindDateService),
+		command.HandlePatternRemindEvery,
+		command.HandleRemindEvery(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindwhen.HandlePattern,
-		remindwhen.HandleRemindWhen(remindDateService),
+		command.HandlePatternRemindWhen,
+		command.HandleRemindWhen(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindeverydayofweek.HandlePattern,
-		remindeverydayofweek.HandleRemindEveryDayOfWeek(remindDateService),
+		command.HandlePatternRemindEveryDayOfWeek,
+		command.HandleRemindEveryDayOfWeek(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindeveryday.HandlePattern,
-		remindeveryday.HandleRemindEveryDay(remindDateService),
+		command.HandlePatternRemindEveryDay,
+		command.HandleRemindEveryDay(remindDateService),
 	)
 	telegramBot.HandleRegExp(
-		remindat.HandlePattern,
-		remindat.HandleRemindAt(remindDateService),
+		command.HandlePatternRemindAt,
+		command.HandleRemindAt(remindDateService),
 	)
-	telegramBot.Handle(gettimezone.HandlePattern, gettimezone.HandleGetTimezone(chatPreferenceStore))
-	telegramBot.HandleRegExp(settimezone.HandlePattern, settimezone.HandleSetTimezone(setTimeZoneService))
+	telegramBot.Handle(command.HandlePatternGetTimezone, command.HandleGetTimezone(chatPreferenceStore))
+	telegramBot.HandleRegExp(command.HandlePatternSetTimezone, command.HandleSetTimezone(setTimeZoneService))
 
 	// buttons
 	telegramBot.HandleButton(
-		remindDetailButtons[reminddetail.ReminderDetailCloseCommandBtn],
-		reminddetail.HandleCloseBtn(),
+		remindDetailButtons[command.ReminderDetailCloseCommandBtn],
+		command.HandleReminderDetailCloseBtn(),
 	)
 	telegramBot.HandleButton(
-		remindDetailButtons[reminddetail.ReminderDetailDeleteBtn],
-		reminddetail.HandleReminderDetailDeleteBtn(remindDetailService),
+		remindDetailButtons[command.ReminderDetailDeleteBtn],
+		command.HandleReminderDetailDeleteBtn(remindDetailService),
 	)
 	telegramBot.HandleButton(
-		remindDetailButtons[reminddetail.ReminderDetailShowReminderCommandBtn],
-		reminddetail.HandleReminderShowReminderCommandBtn(remindDetailService),
+		remindDetailButtons[command.ReminderDetailShowReminderCommandBtn],
+		command.HandleReminderShowReminderCommandBtn(remindDetailService),
 	)
 	telegramBot.HandleButton(
-		remindListButtons[remindlist.ReminderListRemoveCompletedRemindersBtn],
-		remindlist.HandleReminderListRemoveCompletedRemindersBtn(remindListService),
+		remindListButtons[command.ReminderListRemoveCompletedRemindersBtn],
+		command.HandleReminderListRemoveCompletedRemindersBtn(remindListService),
 	)
 	telegramBot.HandleButton(
-		remindListButtons[remindlist.ReminderListCloseCommandBtn],
-		remindlist.HandleCloseBtn(),
+		remindListButtons[command.ReminderListCloseCommandBtn],
+		command.HandleRemindListCloseBtn(),
 	)
 	telegramBot.HandleButton(
 		reminderCompleteButtons[reminder.Snooze10MinuteBtn],

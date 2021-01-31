@@ -51,7 +51,8 @@ func NewService(
 	}
 }
 
-func (s *Service) AddReminderOnDateTime(chatID int,
+func (s *Service) AddReminderOnDateTime(
+	chatID int,
 	command string,
 	dateTime DateTime,
 	message string,

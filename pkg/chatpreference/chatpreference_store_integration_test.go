@@ -1,8 +1,9 @@
 package chatpreference_test
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 func TestChatPreferenceStore_CreateChatPreference(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -38,7 +39,7 @@ func TestChatPreferenceStore_CreateChatPreference(t *testing.T) {
 func TestChatPreferenceStore_GetChatPreference(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -66,4 +67,12 @@ func checkSkip(t *testing.T) {
 
 func testDBFile() string {
 	return fmt.Sprintf("../%s", os.Getenv("TEST_DB_FILE"))
+}
+
+func generateRandomInt() int {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		panic(err)
+	}
+	return int(nBig.Int64())
 }

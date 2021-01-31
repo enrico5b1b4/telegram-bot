@@ -1,8 +1,9 @@
 package reminder_test
 
 import (
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"os"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 func TestReminderStore_CreateReminder(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -42,7 +43,7 @@ func TestReminderStore_CreateReminder(t *testing.T) {
 func TestReminderStore_UpdateReminder(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -75,7 +76,7 @@ func TestReminderStore_UpdateReminder(t *testing.T) {
 func TestReminderStore_DeleteReminder(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -106,7 +107,7 @@ func TestReminderStore_DeleteReminder(t *testing.T) {
 func TestReminderStore_GetReminder(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -134,8 +135,8 @@ func TestReminderStore_GetReminder(t *testing.T) {
 func TestReminderStore_GetAllRemindersByChat(t *testing.T) {
 	checkSkip(t)
 
-	chatID1 := rand.Intn(100000)
-	chatID2 := rand.Intn(100000)
+	chatID1 := generateRandomInt()
+	chatID2 := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID1, chatID2})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -170,7 +171,7 @@ func TestReminderStore_GetAllRemindersByChat(t *testing.T) {
 func TestReminderStore_GetAllRemindersByChatID(t *testing.T) {
 	checkSkip(t)
 
-	chatID := rand.Intn(100000)
+	chatID := generateRandomInt()
 	database, err := db.SetupDB(testDBFile(), []int{chatID})
 	assert.NoError(t, err)
 	defer database.Close()
@@ -201,4 +202,12 @@ func checkSkip(t *testing.T) {
 
 func testDBFile() string {
 	return fmt.Sprintf("../%s", os.Getenv("TEST_DB_FILE"))
+}
+
+func generateRandomInt() int {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		panic(err)
+	}
+	return int(nBig.Int64())
 }
