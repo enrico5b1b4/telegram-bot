@@ -1,9 +1,11 @@
 package e2e_test
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/enrico5b1b4/tbwrap"
@@ -19,7 +21,7 @@ const chatID = 123456
 func TestE2E(t *testing.T) {
 	checkSkip(t)
 
-	dbFile := MustGetEnv("TEST_E2E_DB_FILE")
+	dbFile := mustGetEnv("TEST_E2E_DB_FILE")
 	allowedChats := []int{chatID}
 
 	telebot, database, err := setup(dbFile, allowedChats)
@@ -66,6 +68,7 @@ func TestE2E(t *testing.T) {
 	telebot.SimulateIncomingMessageToChat(chatID, "/remind me every day MSG10_")
 	require.Contains(t, telebot.OutboundSendMessages[9], `Reminder "MSG10_" has been added`)
 
+	// RemindList
 	telebot.SimulateIncomingMessageToChat(chatID, "/remindlist")
 	require.Contains(t, telebot.OutboundSendMessages[10], `MSG1_`)
 	require.Contains(t, telebot.OutboundSendMessages[10], `MSG2_`)
@@ -85,7 +88,27 @@ func TestE2E(t *testing.T) {
 	require.Contains(t, telebot.OutboundSendMessages[12], `Europe/Rome`)
 
 	telebot.SimulateIncomingMessageToChat(chatID, "/gettimezone")
-	require.Contains(t, telebot.OutboundSendMessages[12], `Europe/Rome`)
+	require.Contains(t, telebot.OutboundSendMessages[13], `Europe/Rome`)
+
+	// Delete a reminder
+	telebot.SimulateIncomingMessageToChat(chatID, "/remindlist")
+	reminderID, err := getReminderIDForMessageFromRemindList(telebot.OutboundSendMessages[14], "MSG4_")
+	require.NoError(t, err)
+
+	telebot.SimulateIncomingMessageToChat(chatID, fmt.Sprintf("/reminddelete %s", reminderID))
+	require.Contains(t, telebot.OutboundSendMessages[15], fmt.Sprintf("Reminder %s has been deleted", reminderID))
+
+	telebot.SimulateIncomingMessageToChat(chatID, "/remindlist")
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG1_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG2_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG3_`)
+	require.NotContains(t, telebot.OutboundSendMessages[16], `MSG4_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG5_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG6_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG7_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG8_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG9_`)
+	require.Contains(t, telebot.OutboundSendMessages[16], `MSG10_`)
 }
 
 func setup(dbFile string, allowedChats []int) (*fakes.TeleBot, *bolt.DB, error) {
@@ -110,7 +133,7 @@ func setup(dbFile string, allowedChats []int) (*fakes.TeleBot, *bolt.DB, error) 
 	return teleBot, database, nil
 }
 
-func MustGetEnv(name string) string {
+func mustGetEnv(name string) string {
 	value := os.Getenv(name)
 	if value == "" {
 		log.Fatalln(fmt.Sprintf("%s must be set", name))
@@ -124,4 +147,14 @@ func checkSkip(t *testing.T) {
 	if testDBFile == "" {
 		t.Skip()
 	}
+}
+
+func getReminderIDForMessageFromRemindList(text, msg string) (string, error) {
+	re := regexp.MustCompile(fmt.Sprintf(`.*%s.*\[\[\/r_([0-9]+)\]\]`, msg))
+	match := re.FindStringSubmatch(text)
+	if len(match) != 2 {
+		return "", errors.New("error getting reminder id")
+	}
+
+	return match[1], nil
 }
