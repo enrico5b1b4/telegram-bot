@@ -5,9 +5,9 @@ import "time"
 type JobType int
 
 const (
-	HealthCheck JobType = iota + 1
-	Backup
-	Reminder
+	HealthCheck JobType = 1
+	Backup      JobType = 2
+	Reminder    JobType = 3
 )
 
 func (j JobType) String() string {
@@ -17,9 +17,9 @@ func (j JobType) String() string {
 type JobStatus int
 
 const (
-	Active JobStatus = iota + 1
-	Inactive
-	Completed
+	Active    JobStatus = 1
+	Inactive  JobStatus = 2
+	Completed JobStatus = 3
 )
 
 func (j JobStatus) String() string {

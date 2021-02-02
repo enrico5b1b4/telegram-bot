@@ -43,8 +43,8 @@ type AmountDateTime struct {
 type WordTimes int
 
 const (
-	Today WordTimes = iota + 1
-	Tomorrow
+	Today    WordTimes = 1
+	Tomorrow WordTimes = 2
 )
 
 func (w WordTimes) String() string {
