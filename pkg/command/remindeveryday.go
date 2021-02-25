@@ -17,7 +17,7 @@ type MessageRemindEveryDay struct {
 }
 
 // nolint:lll
-const HandlePatternRemindEveryDay = `/remind me every ?(?P<when>day|morning|afternoon|evening|night)? ?(at (?P<hour>\d{1,2})?((:|.)(?P<minute>\d{1,2}))??(?P<ampm>am|pm)?)? (?P<message>.*)`
+const HandlePatternRemindEveryDay = `/remind me every ?(?P<when>day|morning|afternoon|evening|night|weekday|weekend)? ?(at (?P<hour>\d{1,2})?((:|.)(?P<minute>\d{1,2}))??(?P<ampm>am|pm)?)? (?P<message>.*)`
 
 func HandleRemindEveryDay(service reminder.Servicer) func(c tbwrap.Context) error {
 	return func(c tbwrap.Context) error {
@@ -40,10 +40,8 @@ func HandleRemindEveryDay(service reminder.Servicer) func(c tbwrap.Context) erro
 
 func mapMessageRemindEveryDayToReminderDateTime(m *MessageRemindEveryDay) reminder.RepeatableDateTime {
 	rdt := reminder.RepeatableDateTime{
-		DayOfMonth: "*",
-		Month:      "*",
-		Hour:       "9",
-		Minute:     "0",
+		Hour:   "9",
+		Minute: "0",
 	}
 
 	switch m.When {
@@ -62,6 +60,16 @@ func mapMessageRemindEveryDayToReminderDateTime(m *MessageRemindEveryDay) remind
 	case "evening", "night":
 		rdt.Hour = "20"
 		rdt.Minute = "0"
+
+	case "weekday":
+		rdt.Hour = "9"
+		rdt.Minute = "0"
+		rdt.DayOfWeek = "1-5"
+
+	case "weekend":
+		rdt.Hour = "9"
+		rdt.Minute = "0"
+		rdt.DayOfWeek = "6,0"
 
 	default:
 	}

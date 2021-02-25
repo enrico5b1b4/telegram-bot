@@ -55,137 +55,170 @@ func newTestHandleRemindEveryDayTestCases() map[string]TestCaseHandleRemindEvery
 		"without hours and minutes": {
 			Text: "/remind me every day update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "9",
-				Minute:     "0",
+				Hour:   "9",
+				Minute: "0",
 			},
 		},
 		"with hours and minutes": {
 			Text: "/remind me every day at 23:34 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "23",
-				Minute:     "34",
+				Hour:   "23",
+				Minute: "34",
 			},
 		},
 		"with hours and minutes dot separator": {
 			Text: "/remind me every day at 23.34 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "23",
-				Minute:     "34",
+				Hour:   "23",
+				Minute: "34",
 			},
 		},
 		"with only hour": {
 			Text: "/remind me every day at 23 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "23",
-				Minute:     "0",
+				Hour:   "23",
+				Minute: "0",
 			},
 		},
 		"with only hour pm": {
 			Text: "/remind me every day at 8pm update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "0",
+				Hour:   "20",
+				Minute: "0",
 			},
 		},
 		"with hour minute pm": {
 			Text: "/remind me every day at 8:30pm update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "30",
+				Hour:   "20",
+				Minute: "30",
 			},
 		},
 		"with hour minute pm dot separator": {
 			Text: "/remind me every day at 8.30pm update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "30",
+				Hour:   "20",
+				Minute: "30",
 			},
 		},
-
 		"with time of day and without hours and minutes": {
 			Text: "/remind me every morning update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "9",
-				Minute:     "0",
+				Hour:   "9",
+				Minute: "0",
 			},
 		},
 		"with time of day and hours and minutes": {
 			Text: "/remind me every evening at 23:34 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "23",
-				Minute:     "34",
+				Hour:   "23",
+				Minute: "34",
 			},
 		},
 		"with time of day and hours and minutes dot separator": {
 			Text: "/remind me every night at 23.34 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "23",
-				Minute:     "34",
+				Hour:   "23",
+				Minute: "34",
 			},
 		},
 		"with time of day and only hour": {
 			Text: "/remind me every evening at 23 update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "23",
-				Minute:     "0",
+				Hour:   "23",
+				Minute: "0",
 			},
 		},
 		"with time of day and only hour pm": {
 			Text: "/remind me every night at 8pm update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "0",
+				Hour:   "20",
+				Minute: "0",
 			},
 		},
 		"with time of day and hour minute pm": {
 			Text: "/remind me every evening at 8:30pm update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "30",
+				Hour:   "20",
+				Minute: "30",
 			},
 		},
 		"with time of day and hour minute pm dot separator": {
 			Text: "/remind me every night at 8.30pm update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "30",
+				Hour:   "20",
+				Minute: "30",
 			},
 		},
 		"with time of day only": {
 			Text: "/remind me every evening update weekly report",
 			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "20",
-				Minute:     "0",
+				Hour:   "20",
+				Minute: "0",
+			},
+		},
+		"with weekday/weekend and without hours and minutes": {
+			Text: "/remind me every weekday update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "1-5",
+				Hour:      "9",
+				Minute:    "0",
+			},
+		},
+		"with weekday/weekend and hours and minutes": {
+			Text: "/remind me every weekend at 23:34 update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "6,0",
+				Hour:      "23",
+				Minute:    "34",
+			},
+		},
+		"with weekday/weekend and hours and minutes dot separator": {
+			Text: "/remind me every weekday at 23.34 update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "1-5",
+				Hour:      "23",
+				Minute:    "34",
+			},
+		},
+		"with weekday/weekend and only hour": {
+			Text: "/remind me every weekend at 23 update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "6,0",
+				Hour:      "23",
+				Minute:    "0",
+			},
+		},
+		"with weekday/weekend and only hour pm": {
+			Text: "/remind me every weekday at 8pm update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "1-5",
+				Hour:      "20",
+				Minute:    "0",
+			},
+		},
+		"with weekday/weekend and hour minute pm": {
+			Text: "/remind me every weekend at 8:30pm update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "6,0",
+				Hour:      "20",
+				Minute:    "30",
+			},
+		},
+		"with weekday/weekend and hour minute pm dot separator": {
+			Text: "/remind me every weekday at 8.30pm update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "1-5",
+				Hour:      "20",
+				Minute:    "30",
+			},
+		},
+		"with weekday/weekend only": {
+			Text: "/remind me every weekend update weekly report",
+			ExpectedRepeatableDateTime: &reminder.RepeatableDateTime{
+				DayOfWeek: "6,0",
+				Hour:      "9",
+				Minute:    "0",
 			},
 		},
 	}
@@ -208,10 +241,8 @@ func TestHandleRemindEveryDay_Failure(t *testing.T) {
 			1,
 			text,
 			&reminder.RepeatableDateTime{
-				DayOfMonth: "*",
-				Month:      "*",
-				Hour:       "9",
-				Minute:     "0",
+				Hour:   "9",
+				Minute: "0",
 			},
 			"update weekly report").
 		Return(reminder.NextScheduleChatTime{}, errors.New("error"))
