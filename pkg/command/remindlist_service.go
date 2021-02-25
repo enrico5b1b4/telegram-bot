@@ -81,17 +81,17 @@ func (s *RemindListService) GetRemindersByChatID(chatID int) ([]ByJobStatusList,
 		{Status: cron.Inactive, Entries: []ListEntryGroup{}},
 		{Status: cron.Completed, Entries: []ListEntryGroup{}},
 	}
-	for _, rem := range reminders {
+	for i := range reminders {
 		rLE := ListEntry{
-			Reminder: rem,
+			Reminder: reminders[i],
 		}
 		rLE.Reminder.Data.Message = truncateString(rLE.Reminder.Data.Message, maxLengthMessageEntry)
-		jobStatusIndex := jobStatusIndexMap[rem.Status]
+		jobStatusIndex := jobStatusIndexMap[reminders[i].Status]
 		var timeKey *time.Time
 
 		// if reminder is still active then fetch next schedule date to display sorted entries to user
-		if rem.Status == cron.Active {
-			cronEntry := s.scheduler.GetEntryByID(rem.CronID)
+		if reminders[i].Status == cron.Active {
+			cronEntry := s.scheduler.GetEntryByID(reminders[i].CronID)
 			nextSchedule := cronEntry.Next.In(chatLocalTimezone)
 
 			rLE.NextSchedule = &nextSchedule

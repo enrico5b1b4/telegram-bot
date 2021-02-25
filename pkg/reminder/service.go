@@ -247,13 +247,15 @@ func (s *Service) ScheduleAndAddReminder(rem *Reminder) (NextScheduleChatTime, e
 		return NextScheduleChatTime{}, err
 	}
 
-	rem.CronID = cronID
-	_, err = s.reminderStore.CreateReminder(rem)
+	rem.CreatedAt = s.timeNow().In(time.UTC)
+	nextScheduleTime, err := s.reminderScheduler.GetNextScheduleTime(cronID)
 	if err != nil {
 		return NextScheduleChatTime{}, err
 	}
+	rem.NextRunAt = &nextScheduleTime
 
-	nextScheduleTime, err := s.reminderScheduler.GetNextScheduleTime(cronID)
+	rem.CronID = cronID
+	_, err = s.reminderStore.CreateReminder(rem)
 	if err != nil {
 		return NextScheduleChatTime{}, err
 	}

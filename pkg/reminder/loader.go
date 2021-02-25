@@ -39,8 +39,8 @@ func NewLoaderService(
 	}
 }
 
-// LoadSchedulesFromDB loads reminders from the DB and creates schedules on
-// the scheduler.
+// LoadSchedulesFromDB loads reminders from the DB
+// and creates schedules on the scheduler.
 // Only Active reminders will have a schedule created
 func (s *LoaderService) LoadSchedulesFromDB() (int, error) {
 	remindersAdded := 0
@@ -61,7 +61,7 @@ func (s *LoaderService) LoadSchedulesFromDB() (int, error) {
 			}
 
 			schedule := fmt.Sprintf("CRON_TZ=%s %s", chatPreference.TimeZone, rmdrListByChat[chatID][i].Job.Schedule)
-			reminderID, err := s.scheduler.Add(
+			reminderCronID, err := s.scheduler.Add(
 				schedule,
 				NewCronFunc(s.reminderJobService, s.b, &rmdrListByChat[chatID][i]),
 			)
@@ -69,7 +69,7 @@ func (s *LoaderService) LoadSchedulesFromDB() (int, error) {
 				return 0, err
 			}
 
-			rmdrListByChat[chatID][i].CronID = reminderID
+			rmdrListByChat[chatID][i].CronID = reminderCronID
 			err = s.reminderStore.UpdateReminder(&rmdrListByChat[chatID][i])
 			if err != nil {
 				return 0, err
@@ -83,7 +83,7 @@ func (s *LoaderService) LoadSchedulesFromDB() (int, error) {
 }
 
 // ReloadSchedulesForChat reschedules reminders for a particular chat.
-// If a schedule is already present on the schedule it is removed before being add again
+// If a schedule is already present on the scheduler it is removed before being added again
 // This is needed as the timezone of the chat might have changed
 func (s *LoaderService) ReloadSchedulesForChat(chatID int) (int, error) {
 	remindersLoaded := 0

@@ -16,6 +16,7 @@ import (
 
 type CronFuncServicer interface {
 	Complete(r *Reminder) error
+	UpdateReminderWithNextRun(rem *Reminder) error
 	UpdateReminderWithRepeatSchedule(rem *Reminder) error
 }
 
@@ -42,6 +43,7 @@ func NewCronFuncService(
 
 func (s *CronFuncService) Complete(r *Reminder) error {
 	r.Status = cron.Completed
+
 	timeNow := time.Now().In(time.UTC)
 	r.CompletedAt = &timeNow
 
@@ -51,49 +53,6 @@ func (s *CronFuncService) Complete(r *Reminder) error {
 	}
 
 	s.scheduler.Remove(r.CronID)
-	return nil
-}
-
-func (s *CronFuncService) UpdateReminderWithRepeatSchedule(rem *Reminder) error {
-	chatPreference, err := s.chatPreferenceStore.GetChatPreference(rem.Job.ChatID)
-	if err != nil {
-		return err
-	}
-
-	loc, err := time.LoadLocation(chatPreference.TimeZone)
-	if err != nil {
-		return err
-	}
-
-	addedTime := time.Now().In(loc).Add(
-		time.Duration(rem.RepeatSchedule.Days)*24*time.Hour +
-			time.Duration(rem.RepeatSchedule.Hours)*time.Hour +
-			time.Duration(rem.RepeatSchedule.Minutes)*time.Minute,
-	)
-
-	schedule := fmt.Sprintf("%d %d %d %d *",
-		addedTime.Minute(),
-		addedTime.Hour(),
-		addedTime.Day(),
-		addedTime.Month(),
-	)
-	rem.Job.Schedule = schedule
-
-	// remove previous cron job before scheduling new one
-	s.scheduler.Remove(rem.CronID)
-
-	scheduleWithTZ := fmt.Sprintf("CRON_TZ=%s %s", chatPreference.TimeZone, schedule)
-	reminderCronID, err := s.scheduler.Add(scheduleWithTZ, NewCronFunc(s, s.b, rem))
-	if err != nil {
-		return err
-	}
-
-	rem.CronID = reminderCronID
-	err = s.reminderStore.UpdateReminder(rem)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -135,11 +94,22 @@ func NewCronFunc(s CronFuncServicer, b telegram.TBWrapBot, r *Reminder) func() {
 			return
 		}
 
+		timeNow := time.Now().In(time.UTC)
+		r.LastRunAt = &timeNow
+
 		if !r.Job.RunOnlyOnce {
+			// update the next run at field of the reminder if it is a recurring reminder
+			err = s.UpdateReminderWithNextRun(r)
+			if err != nil {
+				log.Printf("NewReminderCronFunc UpdateReminderWithNextRun err: %q", err)
+				return
+			}
 			return
 		}
 
 		if r.Job.RepeatSchedule != nil {
+			// if the reminder has a RepeatSchedule then we don't want to Complete() it
+			// but instead calculate the next time it should run and reschedule it
 			updateErr := s.UpdateReminderWithRepeatSchedule(r)
 			if updateErr != nil {
 				log.Printf("NewReminderCronFunc UpdateReminderWithRepeatSchedule err: %q", updateErr)
@@ -154,4 +124,68 @@ func NewCronFunc(s CronFuncServicer, b telegram.TBWrapBot, r *Reminder) func() {
 			return
 		}
 	}
+}
+
+// UpdateReminderWithRepeatSchedule updates the reminder setting the schedule
+// date to be in the future according to the definition of RepeatSchedule.
+// The current reminder on the scheduler gets removed and a new one is created
+// with the newly calculated schedule
+func (s *CronFuncService) UpdateReminderWithRepeatSchedule(rem *Reminder) error {
+	chatPreference, err := s.chatPreferenceStore.GetChatPreference(rem.Job.ChatID)
+	if err != nil {
+		return err
+	}
+
+	loc, err := time.LoadLocation(chatPreference.TimeZone)
+	if err != nil {
+		return err
+	}
+
+	addedTime := time.Now().In(loc).Add(
+		time.Duration(rem.RepeatSchedule.Days)*24*time.Hour +
+			time.Duration(rem.RepeatSchedule.Hours)*time.Hour +
+			time.Duration(rem.RepeatSchedule.Minutes)*time.Minute,
+	)
+
+	schedule := fmt.Sprintf("%d %d %d %d *",
+		addedTime.Minute(),
+		addedTime.Hour(),
+		addedTime.Day(),
+		addedTime.Month(),
+	)
+	rem.Job.Schedule = schedule
+
+	// remove previous cron job before scheduling new one
+	s.scheduler.Remove(rem.CronID)
+
+	scheduleWithTZ := fmt.Sprintf("CRON_TZ=%s %s", chatPreference.TimeZone, schedule)
+	reminderCronID, err := s.scheduler.Add(scheduleWithTZ, NewCronFunc(s, s.b, rem))
+	if err != nil {
+		return err
+	}
+	rem.CronID = reminderCronID
+
+	cronEntry := s.scheduler.GetEntryByID(reminderCronID)
+	rem.NextRunAt = &cronEntry.Next
+
+	err = s.reminderStore.UpdateReminder(rem)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UpdateReminderWithNextRun updates the reminder NextRunAt field
+// with the newly calculated schedule
+func (s *CronFuncService) UpdateReminderWithNextRun(rem *Reminder) error {
+	cronEntry := s.scheduler.GetEntryByID(rem.CronID)
+	rem.NextRunAt = &cronEntry.Next
+
+	err := s.reminderStore.UpdateReminder(rem)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

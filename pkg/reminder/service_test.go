@@ -32,6 +32,7 @@ const (
 
 var (
 	stubNextScheduleTime = timeNow()
+	stubCreatedAt        = timeNow()
 )
 
 func TestService_AddReminderOnDateTime(t *testing.T) {
@@ -64,6 +65,8 @@ func TestService_AddReminderOnDateTime(t *testing.T) {
 				Type:        cron.Reminder,
 				Status:      cron.Active,
 				RunOnlyOnce: true,
+				CreatedAt:   stubCreatedAt,
+				NextRunAt:   &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -87,6 +90,7 @@ func TestService_AddReminderOnDateTime(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, reminder.NextScheduleChatTime{Time: timeNow(), Location: loc}, nextScheduleTime)
 	})
+
 	t.Run("success with day of month without month", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -113,6 +117,8 @@ func TestService_AddReminderOnDateTime(t *testing.T) {
 				Type:        cron.Reminder,
 				Status:      cron.Active,
 				RunOnlyOnce: true,
+				CreatedAt:   stubCreatedAt,
+				NextRunAt:   &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -136,6 +142,7 @@ func TestService_AddReminderOnDateTime(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, reminder.NextScheduleChatTime{Time: timeNow(), Location: loc}, nextScheduleTime)
 	})
+
 	t.Run("success with day of week", func(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -162,6 +169,8 @@ func TestService_AddReminderOnDateTime(t *testing.T) {
 				Type:        cron.Reminder,
 				Status:      cron.Active,
 				RunOnlyOnce: true,
+				CreatedAt:   stubCreatedAt,
+				NextRunAt:   &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -220,6 +229,8 @@ func TestService_AddReminderOnWordDateTime(t *testing.T) {
 				Type:        cron.Reminder,
 				Status:      cron.Active,
 				RunOnlyOnce: true,
+				CreatedAt:   stubCreatedAt,
+				NextRunAt:   &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -274,6 +285,8 @@ func TestService_AddRepeatableReminderOnDateTime(t *testing.T) {
 				Type:        cron.Reminder,
 				Status:      cron.Active,
 				RunOnlyOnce: false,
+				CreatedAt:   stubCreatedAt,
+				NextRunAt:   &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -333,6 +346,8 @@ func TestService_AddReminderIn(t *testing.T) {
 				Type:        cron.Reminder,
 				Status:      cron.Active,
 				RunOnlyOnce: true,
+				CreatedAt:   stubCreatedAt,
+				NextRunAt:   &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -401,6 +416,8 @@ func TestService_AddReminderEvery(t *testing.T) {
 					Hours:   2,
 					Days:    3,
 				},
+				CreatedAt: stubNextScheduleTime,
+				NextRunAt: &stubNextScheduleTime,
 			},
 			Data: reminder.Data{
 				RecipientID: chatID,
@@ -435,5 +452,5 @@ func createMocks(mockCtrl *gomock.Controller) Mocks {
 
 func timeNow() time.Time {
 	timeLoc, _ := time.LoadLocation(timezone)
-	return time.Date(2020, time.April, 1, 13, 45, 0, 0, timeLoc)
+	return time.Date(2020, time.April, 1, 13, 45, 0, 0, timeLoc).In(time.UTC)
 }
